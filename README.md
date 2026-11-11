@@ -9,6 +9,8 @@ spool that comes apart, and I didn't have one.
 What I did have was a laser cutter. So I made my own spools, and since they turned out
 pretty well, here are the files.
 
+Compatible with Bambu Lab filament refills.
+
 **It holds together really well, with zero glue.** Everything is press-fit plus a few little
 snap-on clips.
 
@@ -68,8 +70,8 @@ Everything worth tweaking is at the top of each script:
 
 ## Good to know
 
-- The default flange is Ø200, sized for an AMS (I haven't tried it in one yet). The two-on-one-board version is Ø174 to
-  save wood and does **not** fit an AMS.
+- Tried it in the AMS, works great.
+- The default flange is Ø200. The two-on-one-board version is Ø174 to save wood.
 - Measure your refill's core before cutting. The files assume about 82 mm inside and 60 mm wide.
 - The fill gauge is an estimate based on PLA density. Set `R_FULL_MEASURED` if you want it
   accurate for your filament.
@@ -77,3 +79,11 @@ Everything worth tweaking is at the top of each script:
   `THROAT` a bit.
 
 Have fun, and may you read the product title more carefully than I did.
+
+## License
+
+[CC BY-NC-SA 4.0](LICENSE). In short: use it, change it, share it, just give credit, keep it
+under the same license, and don't sell it. I'm not making money with this and I'd like it
+to stay that way for everyone.
+
+This is a hobby project. It is not affiliated with or endorsed by Bambu Lab.

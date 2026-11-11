@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Laser-cut spool for Bambu Lab refills. Output: spule.svg (mm units).
+"""Laser-cut spool, compatible with Bambu Lab filament refills. Output: spule.svg (mm units).
 Edit the parameters, rerun: python3 gen_spule.py"""
 import math, os
 
