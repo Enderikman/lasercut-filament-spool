@@ -70,7 +70,7 @@ Everything worth tweaking is at the top of each script:
 
 ## Good to know
 
-- I use them on a Prusa CORE One+ and an MK4S, works great.
+- I use the small Ø174 version on a Prusa CORE One+ and an MK4S, works great.
 - The default flange is Ø200. The two-on-one-board version is Ø174 to save wood.
 - Not tested in a Bambu Lab AMS. The Ø200 size should be in the right range for it, the Ø174 one is probably too small.
 - Measure your refill's core before cutting. The files assume about 82 mm inside and 60 mm wide.
