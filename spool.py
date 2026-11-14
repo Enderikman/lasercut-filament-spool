@@ -14,6 +14,8 @@ OD = 174.0         # flange diameter. 174 is what I use; 197-202 is the usual fu
 BORE = 55.0        # centre hole
 HUB = 80.5         # hub diameter over the rib edges (inside of the refill's cardboard core)
 INNER_W = 60.0     # clear width between the flanges (width of the refill)
+SHEET = None       # your board as (width, height) in mm, e.g. (340, 270). None = compact sheet.
+                   # If the compact layout does not fit, the flanges go diagonally instead.
 
 # fill gauge: window in one flange plus a gram scale
 R_EMPTY = 43.0     # radius where the winding starts
@@ -137,9 +139,9 @@ def clip(x, y):
     path(pts, x, y + CLIP_W / 2)
 
 
-# --- layout: both flanges side by side, small parts in the gaps and underneath ---------------
-C = [(OD / 2, OD / 2), (OD / 2 + OD + GAP, OD / 2)]
-SHEET_W = 2 * OD + GAP
+# --- layout ----------------------------------------------------------------------------------
+R = OD / 2
+COMPACT_W, COMPACT_H = 2 * OD + GAP, OD + 2 * GAP + 2 * RIB_W
 placed = []                                 # (x1, y1, x2, y2, bore centre or None)
 
 
@@ -148,24 +150,64 @@ def put(draw, x, y, w, h, bore=None):
     placed.append((x, y, x + w, y + h, bore))
 
 
-flange(*C[0], with_gauge=True)
-flange(*C[1])
-block = 3 * CLIP_W + 2 * GAP
-for c in C:                                 # 3 clips inside each centre hole (waste anyway)
-    for i in range(3):
-        put(clip, c[0] - CLIP_L / 2, c[1] - block / 2 + i * (CLIP_W + GAP), CLIP_L, CLIP_W, bore=c)
-mid = SHEET_W / 2 - CLIP_L / 2
-for i in range(2):                          # 2 + 2 clips in the gaps between the flanges
-    put(clip, mid, i * (CLIP_W + GAP), CLIP_L, CLIP_W)
-    put(clip, mid, OD - CLIP_W - i * (CLIP_W + GAP), CLIP_L, CLIP_W)
-row = OD + GAP
-for i in range(4):                          # ribs underneath
-    put(rib, i * (RIB_L + GAP), row, RIB_L, RIB_W)
-for i in range(2):
-    put(rib, i * (RIB_L + GAP), row + RIB_W + GAP, RIB_L, RIB_W)
-for i in range(2):                          # last 2 clips next to the ribs
-    put(clip, 2 * (RIB_L + GAP) + i * (CLIP_L + GAP), row + RIB_W + GAP, CLIP_L, CLIP_W)
-SHEET_H = max(p[3] for p in placed)
+def clips_in_bores():                       # 3 clips inside each centre hole (waste anyway)
+    block = 3 * CLIP_W + 2 * GAP
+    for c in C:
+        for i in range(3):
+            put(clip, c[0] - CLIP_L / 2, c[1] - block / 2 + i * (CLIP_W + GAP), CLIP_L, CLIP_W, bore=c)
+
+
+def shelf_pack(items, areas):
+    """Place (draw, w, h) items row by row into free rectangles. False if they do not all fit."""
+    items = list(items)
+    for ax1, ay1, ax2, ay2 in areas:
+        x, y, row_h = ax1, ay1, 0.0
+        while items:
+            draw, w, h = items[0]
+            if x + w > ax2:                 # start a new row
+                x, y, row_h = ax1, y + row_h + GAP, 0.0
+            if x + w > ax2 or y + h > ay2:
+                break
+            put(draw, x, y, w, h)
+            items.pop(0)
+            x, row_h = x + w + GAP, max(row_h, h)
+    return not items
+
+
+if SHEET is None or (SHEET[0] >= COMPACT_W and SHEET[1] >= COMPACT_H):
+    # compact: both flanges side by side, small parts in the gaps and underneath
+    M = 0.0
+    C = [(R, R), (R + OD + GAP, R)]
+    SHEET_W = COMPACT_W
+    flange(*C[0], with_gauge=True)
+    flange(*C[1])
+    clips_in_bores()
+    mid = SHEET_W / 2 - CLIP_L / 2
+    for i in range(2):                      # 2 + 2 clips in the gaps between the flanges
+        put(clip, mid, i * (CLIP_W + GAP), CLIP_L, CLIP_W)
+        put(clip, mid, OD - CLIP_W - i * (CLIP_W + GAP), CLIP_L, CLIP_W)
+    row = OD + GAP
+    for i in range(4):                      # ribs underneath
+        put(rib, i * (RIB_L + GAP), row, RIB_L, RIB_W)
+    for i in range(2):
+        put(rib, i * (RIB_L + GAP), row + RIB_W + GAP, RIB_L, RIB_W)
+    for i in range(2):                      # last 2 clips next to the ribs
+        put(clip, 2 * (RIB_L + GAP) + i * (CLIP_L + GAP), row + RIB_W + GAP, CLIP_L, CLIP_W)
+    SHEET_H = max(p[3] for p in placed)
+else:
+    # diagonal: flanges in opposite corners, small parts in the two free corners
+    M = 2.0                                 # margin to the board edge
+    SHEET_W, SHEET_H = map(float, SHEET)
+    C = [(M + R, M + R), (SHEET_W - M - R, SHEET_H - M - R)]
+    if min(SHEET) < OD + 2 * M or math.dist(*C) < OD + CLEAR:
+        raise SystemExit(f"board {SHEET[0]} x {SHEET[1]} is too small for two {OD:.0f} mm flanges")
+    flange(*C[0], with_gauge=True)
+    flange(*C[1])
+    clips_in_bores()
+    free = [(C[0][0] + R + CLEAR, M, SHEET_W - M, C[1][1] - R - CLEAR),    # top right
+            (M, C[0][1] + R + CLEAR, C[1][0] - R - CLEAR, SHEET_H - M)]    # bottom left
+    if not shelf_pack([(rib, RIB_L, RIB_W)] * N_RIBS + [(clip, CLIP_L, CLIP_W)] * 6, free):
+        raise SystemExit(f"board {SHEET[0]} x {SHEET[1]}: ribs and clips do not fit next to the flanges")
 
 # safety checks, so a changed parameter cannot silently produce overlapping cuts
 for x1, y1, x2, y2, bore in placed:
@@ -173,7 +215,7 @@ for x1, y1, x2, y2, bore in placed:
     if bore:
         assert max(math.dist(p, bore) for p in corners) <= BORE / 2 - 1.0, "clips do not fit in the centre hole"
         continue
-    assert x1 >= 0 and y1 >= 0 and x2 <= SHEET_W + 1e-6, "part outside the sheet"
+    assert x1 >= M and y1 >= M and x2 <= SHEET_W - M + 1e-6 and y2 <= SHEET_H - M + 1e-6, "part outside the sheet"
     for c in C:
         near = (min(max(c[0], x1), x2), min(max(c[1], y1), y2))
         assert math.dist(near, c) >= OD / 2 + CLEAR, "part too close to a flange"

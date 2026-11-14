@@ -25,7 +25,8 @@ Just **[`spool.svg`](spool.svg)**. One sheet, one complete spool:
 - 12 clips
 
 It needs 350 × 204 mm of 3 mm plywood. Red lines are cuts, blue lines are a light score
-(the gram scale next to the window).
+(the gram scale next to the window). Board narrower than 350 mm? See `SHEET` under
+[Changing things](#changing-things).
 
 ## Cutting
 
@@ -55,6 +56,10 @@ python3 spool.py
 
 That rewrites `spool.svg`. Worth knowing:
 
+- `SHEET`: your board size, e.g. `(340, 270)`. If the compact 350 × 204 layout does not fit,
+  the flanges go into opposite corners and the ribs and clips fill the free corners (with a
+  2 mm margin to the edge). For a Ø174 spool, 340 × 250 mm works; the narrower the board,
+  the taller it has to be. The script tells you if your board is too small.
 - `KERF`: raise it if the ribs sit too loose in the slots.
 - `THROAT`: raise it a little if the clips break while you push them on.
 - `OD`: flange diameter. 174 saves wood, full-size spools are around 200.
